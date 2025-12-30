@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentRun Sandbox VNC 查看器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .controls {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+            animation: none;
+        }
+
+        .status-dot.connecting {
+            background: #ffc107;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .vnc-container {
+            position: relative;
+            background: #000;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        #vnc-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+            display: block;
+        }
+        
+        /* 确保 Canvas 正确显示 */
+        #vnc-screen canvas {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100%;
+        }
+
+        .loading {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="input-group">
+                <label for="vnc-url">VNC URL:</label>
+                <input 
+                    type="text" 
+                    id="vnc-url" 
+                    placeholder="wss://your-account-id.funagent-data-pre.cn-hangzhou.aliyuncs.com/sandboxes/xxx/ws/livestream"
+                    value=""
+                >
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="btn-connect">
+                    🔗 连接
+                </button>
+                <button class="btn-secondary" id="btn-disconnect" disabled>
+                    🔌 断开
+                </button>
+                <button class="btn-success" id="btn-clear">
+                    🗑️ 清空
+                </button>
+            </div>
+            <div class="status" id="status">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">未连接</span>
+            </div>
+        </div>
+
+        <div class="vnc-container">
+            <div id="vnc-screen" class="loading">
+                <div>等待连接...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用 CDN 加载 noVNC -->
+    <script type="module">
+        // 动态加载 noVNC
+        let RFB = null;
+        let rfb = null;
+
+        async function loadNoVNC() {
+            try {
+                // 方法1: 尝试从 jsdelivr CDN 加载（使用 GitHub 版本）
+                console.log('📦 尝试从 CDN 加载 noVNC...');
+                const module = await import('https://cdn.jsdelivr.net/gh/novnc/noVNC@v1.4.0/core/rfb.js');
+                RFB = module.default || module.RFB || module;
+                console.log('✅ noVNC 加载成功，RFB 类型:', typeof RFB);
+                console.log('📋 RFB 构造函数:', RFB);
+                return true;
+            } catch (error) {
+                console.warn('⚠️ 方法1 失败，尝试方法2...', error);
+                // 方法2: 尝试从 npm CDN 加载
+                try {
+                    const module2 = await import('https://cdn.jsdelivr.net/npm/@novnc/novnc@1.4.0/core/rfb.js');
+                    RFB = module2.default || module2.RFB || module2;
+                    console.log('✅ noVNC 从 npm CDN 加载成功');
+                    return true;
+                } catch (e2) {
+                    console.warn('⚠️ 方法2 失败，尝试方法3...', e2);
+                    // 方法3: 使用动态脚本标签加载
+                    return new Promise((resolve) => {
+                        const script = document.createElement('script');
+                        script.type = 'module';
+                        script.textContent = `
+                            import RFB from 'https://cdn.jsdelivr.net/gh/novnc/noVNC@v1.4.0/core/rfb.js';
+                            window.__noVNC_RFB = RFB;
+                            window.dispatchEvent(new CustomEvent('novnc-loaded'));
+                        `;
+                        document.head.appendChild(script);
+                        
+                        const timeout = setTimeout(() => {
+                            console.error('❌ noVNC 加载超时');
+                            resolve(false);
+                        }, 10000);
+                        
+                        window.addEventListener('novnc-loaded', () => {
+                            clearTimeout(timeout);
+                            RFB = window.__noVNC_RFB;
+                            console.log('✅ noVNC 从动态脚本加载成功');
+                            resolve(true);
+                        }, { once: true });
+                    });
+                }
+            }
+        }
+
+        // 初始化
+        let novncLoaded = false;
+        let autoConnectUrl = null;
+        
+        // 获取 DOM 元素
+        const vncUrlInput = document.getElementById('vnc-url');
+        const btnConnect = document.getElementById('btn-connect');
+        const btnDisconnect = document.getElementById('btn-disconnect');
+        const btnClear = document.getElementById('btn-clear');
+        const statusText = document.getElementById('status-text');
+        const statusDot = document.getElementById('status-dot');
+        const vncScreen = document.getElementById('vnc-screen');
+        
+        // 检查 URL 参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const vncUrlFromParams = urlParams.get('url');
+        if (vncUrlFromParams) {
+            autoConnectUrl = decodeURIComponent(vncUrlFromParams);
+            // 立即填入输入框
+            vncUrlInput.value = autoConnectUrl;
+            console.log('✅ 从 URL 参数获取 VNC URL:', autoConnectUrl.substring(0, 80) + '...');
+        }
+        
+        // 自动连接函数
+        function tryAutoConnect() {
+            if (novncLoaded && RFB && autoConnectUrl) {
+                // 确保输入框有值
+                if (vncUrlInput.value !== autoConnectUrl) {
+                    vncUrlInput.value = autoConnectUrl;
+                }
+                console.log('🔄 尝试自动连接 VNC...');
+                // 延迟一下确保页面完全加载
+                setTimeout(() => {
+                    connectVNC();
+                    autoConnectUrl = null; // 只自动连接一次
+                }, 1000); // 增加延迟时间，确保 noVNC 完全加载
+            } else if (autoConnectUrl) {
+                // 如果还没准备好，继续等待
+                console.log('⏳ 等待 noVNC 加载完成...', {
+                    novncLoaded,
+                    hasRFB: !!RFB,
+                    hasUrl: !!autoConnectUrl
+                });
+                setTimeout(tryAutoConnect, 500);
+            }
+        }
+        
+        loadNoVNC().then(loaded => {
+            novncLoaded = loaded;
+            if (!loaded) {
+                document.getElementById('status-text').textContent = 'noVNC 加载失败，请刷新页面重试';
+                document.getElementById('status-dot').classList.remove('connecting');
+            } else {
+                console.log('✅ noVNC 加载完成');
+                if (autoConnectUrl) {
+                    // noVNC 加载完成后，尝试自动连接
+                    tryAutoConnect();
+                }
+            }
+        });
+
+
+        // 更新状态
+        function updateStatus(status, text) {
+            statusDot.className = 'status-dot';
+            if (status === 'connected') {
+                statusDot.classList.add('connected');
+            } else if (status === 'connecting') {
+                statusDot.classList.add('connecting');
+            }
+            statusText.textContent = text;
+        }
+
+        // 连接 VNC
+        async function connectVNC() {
+            const url = vncUrlInput.value.trim();
+            
+            if (!url) {
+                alert('请输入 VNC URL');
+                return;
+            }
+
+            if (!novncLoaded) {
+                alert('noVNC 尚未加载完成，请稍候再试');
+                return;
+            }
+
+            if (!RFB) {
+                alert('RFB 类未加载，请刷新页面重试');
+                return;
+            }
+
+            // 清理旧连接
+            if (rfb) {
+                try {
+                    rfb.disconnect();
+                } catch (e) {
+                    console.error('断开旧连接时出错:', e);
+                }
+                rfb = null;
+            }
+
+            updateStatus('connecting', '正在连接...');
+            btnConnect.disabled = true;
+            btnDisconnect.disabled = false;
+
+            try {
+                // 清空屏幕并确保容器正确
+                vncScreen.innerHTML = '';
+                vncScreen.style.width = '100%';
+                vncScreen.style.height = '100%';
+                vncScreen.style.minHeight = '600px';
+                vncScreen.style.position = 'relative';
+                vncScreen.style.background = '#000';
+                vncScreen.style.display = 'block';
+
+                // 创建 RFB 实例
+                console.log('🔗 连接到 VNC:', url);
+                console.log('📦 屏幕元素:', vncScreen);
+                console.log('📦 RFB 构造函数:', RFB);
+                
+                // 检查 RFB 是否正确加载
+                if (!RFB || typeof RFB !== 'function') {
+                    throw new Error('RFB 类未正确加载，请刷新页面重试');
+                }
+                
+                // 创建 RFB 实例（noVNC 1.4.0 的 API）
+                // 注意：第二个参数是 WebSocket URL，第三个参数是选项
+                rfb = new RFB(vncScreen, url, {
+                    shared: true,
+                    credentials: {
+                        password: ''
+                    }
+                });
+                
+                console.log('✅ RFB 实例已创建:', rfb);
+
+                // 配置 RFB（必须在连接前设置）
+                if (rfb) {
+                    rfb.viewOnly = false;  // 允许交互
+                    rfb.scaleViewport = true;
+                    rfb.resizeSession = false;
+                    rfb.showDotCursor = true;
+                    rfb.background = 'rgb(0, 0, 0)';
+                    
+                    // 监听连接成功事件
+                    rfb.addEventListener('connect', (e) => {
+                        console.log('✅ VNC 连接成功！', e);
+                        updateStatus('connected', '已连接');
+                        
+                        // 等待一小段时间后检查 Canvas
+                        setTimeout(() => {
+                            // 检查是否有 canvas 元素
+                            const canvas = vncScreen.querySelector('canvas');
+                            if (canvas) {
+                                console.log('✅ Canvas 元素已创建:', {
+                                    width: canvas.width,
+                                    height: canvas.height,
+                                    clientWidth: canvas.clientWidth,
+                                    clientHeight: canvas.clientHeight,
+                                    style: canvas.style.cssText,
+                                    display: window.getComputedStyle(canvas).display,
+                                    visibility: window.getComputedStyle(canvas).visibility
+                                });
+                                
+                                // 确保 Canvas 可见
+                                canvas.style.display = 'block';
+                                canvas.style.visibility = 'visible';
+                                
+                                // 强制触发重绘
+                                if (canvas.width > 0 && canvas.height > 0) {
+                                    console.log('📺 Canvas 尺寸正常，应该开始渲染');
+                                } else {
+                                    console.warn('⚠️ Canvas 尺寸为 0，可能有问题');
+                                }
+                            } else {
+                                console.warn('⚠️ 未找到 Canvas 元素，检查 vncScreen 内容:', vncScreen.innerHTML);
+                                
+                                // 尝试手动查找所有 canvas
+                                const allCanvases = document.querySelectorAll('canvas');
+                                console.log('🔍 页面中所有 Canvas 元素:', allCanvases.length);
+                                allCanvases.forEach((c, i) => {
+                                    console.log(`  Canvas ${i}:`, {
+                                        width: c.width,
+                                        height: c.height,
+                                        parent: c.parentElement?.id || c.parentElement?.tagName
+                                    });
+                                });
+                            }
+                        }, 500);
+                    });
+                    
+                    // 监听桌面名称事件（连接成功后会触发，表示服务器已准备好）
+                    rfb.addEventListener('desktopname', (e) => {
+                        console.log('🖥️ 桌面名称:', e.detail?.name || e.detail);
+                        console.log('📺 桌面信息已接收，屏幕应该开始渲染');
+                    });
+                    
+                    // 监听服务器能力事件
+                    rfb.addEventListener('capabilities', (e) => {
+                        console.log('🔧 服务器能力:', e.detail);
+                    });
+                    
+                    // 监听需要凭据事件
+                    rfb.addEventListener('credentialsrequired', (e) => {
+                        console.log('🔐 需要凭据:', e.detail);
+                        try {
+                            rfb.sendCredentials({ password: '' });
+                        } catch (err) {
+                            console.warn('发送凭据失败:', err);
+                        }
+                    });
+                    
+                    // 监听屏幕更新事件
+                    rfb.addEventListener('bell', () => {
+                        console.log('🔔 屏幕更新事件');
+                    });
+                }
+
+                rfb.addEventListener('disconnect', (e) => {
+                    console.log('🔌 VNC 断开连接:', e.detail);
+                    updateStatus('disconnected', '已断开');
+                    btnConnect.disabled = false;
+                    btnDisconnect.disabled = true;
+                    
+                    if (!e.detail?.clean) {
+                        vncScreen.innerHTML = '<div class="loading">连接断开，请检查 VNC URL 是否正确</div>';
+                    }
+                });
+
+                rfb.addEventListener('securityfailure', (e) => {
+                    console.error('❌ VNC 安全验证失败:', e.detail);
+                    updateStatus('error', '安全验证失败');
+                    vncScreen.innerHTML = '<div class="loading">安全验证失败，请检查连接信息</div>';
+                    btnConnect.disabled = false;
+                    btnDisconnect.disabled = true;
+                });
+
+            } catch (error) {
+                console.error('❌ VNC 连接失败:', error);
+                updateStatus('error', `连接失败: ${error.message}`);
+                vncScreen.innerHTML = `<div class="loading">连接失败: ${error.message}</div>`;
+                btnConnect.disabled = false;
+                btnDisconnect.disabled = true;
+            }
+        }
+
+        // 断开连接
+        function disconnectVNC() {
+            if (rfb) {
+                try {
+                    rfb.disconnect();
+                    rfb = null;
+                } catch (e) {
+                    console.error('断开连接时出错:', e);
+                }
+            }
+            updateStatus('disconnected', '已断开');
+            btnConnect.disabled = false;
+            btnDisconnect.disabled = true;
+            vncScreen.innerHTML = '<div class="loading">等待连接...</div>';
+        }
+
+        // 清空输入
+        function clearInput() {
+            vncUrlInput.value = '';
+            disconnectVNC();
+        }
+
+        // 事件绑定
+        btnConnect.addEventListener('click', connectVNC);
+        btnDisconnect.addEventListener('click', disconnectVNC);
+        btnClear.addEventListener('click', clearInput);
+
+        // 支持回车键连接
+        vncUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                connectVNC();
+            }
+        });
+
+        // 页面卸载时断开连接
+        window.addEventListener('beforeunload', () => {
+            if (rfb) {
+                try {
+                    rfb.disconnect();
+                } catch (e) {
+                    console.error('页面卸载时断开连接出错:', e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

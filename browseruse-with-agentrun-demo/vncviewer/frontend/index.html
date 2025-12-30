@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrowserUse Agent 列表</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🖥️ BrowserUse Agent 列表</h1>
+        
+        <div class="sessions" id="sessions">
+        </div>
+    </div>
+    
+    <button class="refresh-btn" id="refresh-btn" title="刷新 Sandbox 列表">
+        🔄
+    </button>
+    
+    <script>
+        let isLoading = false;
+        
+        async function loadSessions() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            const refreshBtn = document.getElementById('refresh-btn');
+            refreshBtn.classList.add('loading');
+            
+            try {
+                // ✅ 更新：使用新的 API 接口
+                const response = await fetch('/api/sandboxes');
+                const sandboxes = await response.json();
+                
+                const container = document.getElementById('sessions');
+                
+                // ✅ 更新：直接使用数组（不是 data.sessions）
+                if (!sandboxes || sandboxes.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <h2>暂无活跃 Agent</h2>
+                            <p>Agent 将出现在这里</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '';
+                    
+                    // ✅ 更新：使用 sandboxes 数组和 sandbox 对象
+                    sandboxes.forEach(sandbox => {
+                        const card = document.createElement('div');
+                        card.className = 'session-card';
+                        
+                        // ✅ 更新：使用新的字段名
+                        const lastActivity = sandbox.last_access_at 
+                            ? new Date(sandbox.last_access_at * 1000).toLocaleString('zh-CN')
+                            : 'N/A';
+                        
+                        card.innerHTML = `
+                            <h3>${sandbox.sandbox_id}</h3>
+                            <p><strong>CDP URL:</strong> ${sandbox.cdp_url ? '✅ 已设置' : '❌ 未设置'}</p>
+                            <p><strong>VNC URL:</strong> ${sandbox.vnc_url ? '✅ 已设置' : '❌ 未设置'}</p>
+                            <p><strong>日志数:</strong> ${sandbox.log_count || 0}</p>
+                            <p><strong>最后访问:</strong> ${lastActivity}</p>
+                            <a href="/viewer/${sandbox.sandbox_id}">查看详情 →</a>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } catch (error) {
+                console.error('加载 Sandbox 列表失败:', error);
+                const container = document.getElementById('sessions');
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h2>⚠️ 加载失败</h2>
+                        <p>无法连接到服务器，请确保 VNC Manager Server 正在运行</p>
+                        <p style="color: #999; font-size: 0.9em;">错误信息: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                isLoading = false;
+                refreshBtn.classList.remove('loading');
+            }
+        }
+        
+        // 初始加载
+        loadSessions();
+        
+        // 定时刷新（每 5 秒）
+        setInterval(loadSessions, 5000);
+        
+        // 刷新按钮
+        document.getElementById('refresh-btn').addEventListener('click', loadSessions);
+    </script>
+</body>
+</html>
+

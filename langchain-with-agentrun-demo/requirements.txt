@@ -1,0 +1,13 @@
+# LangChain 核心库
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-community>=0.0.20
+
+# AgentRun SDK
+agentrun-sdk[playwright,server]>=0.0.8
+
+# 浏览器自动化
+playwright>=1.40.0
+
+# 环境变量管理
+python-dotenv>=1.0.0

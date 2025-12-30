@@ -1,0 +1,152 @@
+/**
+ * VNC Viewer - 公共样式
+ * 包含通用样式和 ANSI 颜色渲染样式
+ */
+
+/* ========== 基础重置 ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== ANSI 颜色样式 ========== */
+/* 这些类将由 JavaScript 动态应用，但在此定义以确保一致性 */
+
+.ansi-color-30 { color: #2c3e50; } /* 黑色 */
+.ansi-color-31 { color: #e74c3c; } /* 红色 */
+.ansi-color-32 { color: #27ae60; } /* 绿色 */
+.ansi-color-33 { color: #f39c12; } /* 黄色 */
+.ansi-color-34 { color: #3498db; } /* 蓝色 */
+.ansi-color-35 { color: #9b59b6; } /* 紫色 */
+.ansi-color-36 { color: #16a085; } /* 青色 */
+.ansi-color-37 { color: #ecf0f1; } /* 白色 */
+
+/* 明亮颜色 */
+.ansi-color-90 { color: #7f8c8d; } /* 明亮黑色（灰色） */
+.ansi-color-91 { color: #c0392b; } /* 明亮红色 */
+.ansi-color-92 { color: #2ecc71; } /* 明亮绿色 */
+.ansi-color-93 { color: #f1c40f; } /* 明亮黄色 */
+.ansi-color-94 { color: #2980b9; } /* 明亮蓝色 */
+.ansi-color-95 { color: #8e44ad; } /* 明亮紫色 */
+.ansi-color-96 { color: #1abc9c; } /* 明亮青色 */
+.ansi-color-97 { color: #ffffff; } /* 明亮白色 */
+
+/* 背景颜色 */
+.ansi-bg-40 { background-color: #2c3e50; }
+.ansi-bg-41 { background-color: #e74c3c; }
+.ansi-bg-42 { background-color: #27ae60; }
+.ansi-bg-43 { background-color: #f39c12; }
+.ansi-bg-44 { background-color: #3498db; }
+.ansi-bg-45 { background-color: #9b59b6; }
+.ansi-bg-46 { background-color: #16a085; }
+.ansi-bg-47 { background-color: #ecf0f1; }
+
+/* 明亮背景颜色 */
+.ansi-bg-100 { background-color: #7f8c8d; }
+.ansi-bg-101 { background-color: #c0392b; }
+.ansi-bg-102 { background-color: #2ecc71; }
+.ansi-bg-103 { background-color: #f1c40f; }
+.ansi-bg-104 { background-color: #2980b9; }
+.ansi-bg-105 { background-color: #8e44ad; }
+.ansi-bg-106 { background-color: #1abc9c; }
+.ansi-bg-107 { background-color: #ffffff; }
+
+/* 文本样式 */
+.ansi-bold { font-weight: bold; }
+.ansi-dim { opacity: 0.7; }
+.ansi-italic { font-style: italic; }
+.ansi-underline { text-decoration: underline; }
+
+/* ========== 滚动条样式 ========== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #505050;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #606060;
+}
+
+/* ========== 工具提示 ========== */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* ========== 加载动画 ========== */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+}
+

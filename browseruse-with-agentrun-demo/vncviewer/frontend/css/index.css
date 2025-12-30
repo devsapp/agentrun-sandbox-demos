@@ -1,0 +1,181 @@
+/**
+ * VNC Viewer - 首页（Sandbox 列表）样式
+ */
+
+body {
+    background:  #667eea;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ========== Sandbox 卡片网格 ========== */
+.sessions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.session-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.session-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.session-card h3 {
+    font-size: 0.9em;
+    color: #667eea;
+    margin-bottom: 12px;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+.session-card p {
+    margin: 8px 0;
+    color: #555;
+    font-size: 0.95em;
+}
+
+.session-card p strong {
+    color: #333;
+    display: inline-block;
+    width: 80px;
+}
+
+/* ========== 状态标签 ========== */
+.status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.status.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.initializing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status.closed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ========== 查看详情按钮 ========== */
+.session-card a {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.session-card a:hover {
+    opacity: 0.9;
+    transform: translateX(2px);
+}
+
+/* ========== 空状态 ========== */
+.empty-state {
+    text-align: center;
+    color: white;
+    padding: 60px 20px;
+}
+
+.empty-state h2 {
+    font-size: 2em;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+/* ========== 刷新按钮 ========== */
+.refresh-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    font-size: 24px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 1000;
+}
+
+.refresh-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.refresh-btn:active {
+    transform: scale(0.95);
+}
+
+.refresh-btn.loading {
+    animation: spin 1s linear infinite;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .sessions {
+        grid-template-columns: 1fr;
+    }
+    
+    .refresh-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+
+@media (max-width: 400px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .session-card {
+        padding: 16px;
+    }
+}
+

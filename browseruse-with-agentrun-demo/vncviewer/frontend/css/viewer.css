@@ -1,0 +1,370 @@
+/**
+ * VNC Viewer - 查看器页面样式
+ * 包含双栏布局（日志 + VNC）和 ANSI 颜色渲染支持
+ */
+
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    overflow: hidden;
+}
+
+/* ========== 顶部工具栏 ========== */
+.toolbar {
+    height: 50px;
+    background: #2d2d2d;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    flex-shrink: 0;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #666;
+    transition: all 0.3s ease;
+}
+
+.status-dot.online {
+    background: #52c41a;
+    box-shadow: 0 0 8px #52c41a;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.offline {
+    background: #ff4d4f;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.toolbar button {
+    background: #3a3a3a;
+    border: 1px solid #505050;
+    color: #e0e0e0;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.toolbar button:hover {
+    background: #454545;
+    border-color: #606060;
+}
+
+.toolbar button:active {
+    background: #2a2a2a;
+}
+
+/* ========== 主内容区（双栏布局） ========== */
+.main-container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ========== 左栏：日志面板 ========== */
+.left-panel {
+    width: 40%;
+    min-width: 300px;
+    max-width: 600px;
+    background: #252525;
+    border-right: 1px solid #404040;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* 可调整大小的分隔条 */
+.left-panel::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #404040;
+    cursor: col-resize;
+    transition: background 0.2s;
+}
+
+.left-panel:hover::after {
+    background: #667eea;
+}
+
+.panel-header {
+    height: 50px;
+    background: #2d2d2d;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    flex-shrink: 0;
+}
+
+.panel-header h3 {
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========== 日志控制 ========== */
+.log-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+#log-search {
+    background: #3a3a3a;
+    border: 1px solid #505050;
+    color: #e0e0e0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    width: 150px;
+    transition: all 0.2s;
+}
+
+#log-search:focus {
+    outline: none;
+    border-color: #667eea;
+    background: #404040;
+}
+
+.filter-btn {
+    background: #3a3a3a;
+    border: 1px solid #505050;
+    color: #e0e0e0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background: #454545;
+}
+
+.filter-btn.active {
+    background: #667eea;
+    border-color: #667eea;
+}
+
+/* ========== 日志内容区 ========== */
+.log-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.log-entry {
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+    word-wrap: break-word;
+    transition: background 0.2s;
+}
+
+.log-entry:hover {
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* 日志级别颜色 */
+.log-entry.log-info {
+    background: #2a2a2a;
+    border-left-color: #1890ff;
+}
+
+.log-entry.log-thinking {
+    background: #2d2550;
+    border-left-color: #9254de;
+}
+
+.log-entry.log-action {
+    background: #1f3a2f;
+    border-left-color: #52c41a;
+}
+
+.log-entry.log-result {
+    background: #1f3a35;
+    border-left-color: #13c2c2;
+}
+
+.log-entry.log-error {
+    background: #3a2020;
+    border-left-color: #ff4d4f;
+}
+
+.log-entry.log-step {
+    background: #3a2f1f;
+    border-left-color: #fa8c16;
+}
+
+.log-time {
+    color: #888;
+    margin-right: 8px;
+    font-size: 11px;
+}
+
+/* ========== 日志页脚 ========== */
+.log-footer {
+    height: 40px;
+    background: #2d2d2d;
+    border-top: 1px solid #404040;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    flex-shrink: 0;
+}
+
+.log-footer button {
+    background: #3a3a3a;
+    border: 1px solid #505050;
+    color: #e0e0e0;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    margin-right: 8px;
+}
+
+.log-footer button:hover {
+    background: #454545;
+}
+
+.log-footer button:active {
+    background: #2a2a2a;
+}
+
+#log-count {
+    font-size: 12px;
+    color: #888;
+}
+
+/* ========== 右栏：VNC 面板 ========== */
+.right-panel {
+    flex: 1;
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+}
+
+.vnc-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+}
+
+#vnc-screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading {
+    color: #888;
+    font-size: 16px;
+    text-align: center;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 1024px) {
+    .main-container {
+        flex-direction: column;
+    }
+    
+    .left-panel {
+        width: 100%;
+        max-width: none;
+        height: 40%;
+        border-right: none;
+        border-bottom: 1px solid #404040;
+    }
+    
+    .left-panel::after {
+        display: none;
+    }
+    
+    .log-controls {
+        flex-wrap: wrap;
+    }
+    
+    #log-search {
+        width: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    .toolbar {
+        padding: 0 10px;
+        height: 45px;
+    }
+    
+    .toolbar-left {
+        gap: 10px;
+    }
+    
+    .status-badge {
+        font-size: 12px;
+    }
+    
+    .toolbar button {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    .panel-header h3 {
+        font-size: 14px;
+    }
+    
+    .log-content {
+        font-size: 12px;
+    }
+}
+

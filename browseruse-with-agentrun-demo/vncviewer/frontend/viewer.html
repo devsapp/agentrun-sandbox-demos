@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNC Viewer</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/viewer.css">
+    <style>
+        /* 页面特定的额外样式可以放在这里 */
+        /* 页面特定的额外样式已移到 viewer.css */
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="status-badge">
+                <span class="status-dot" id="sandbox-dot"></span>
+                <span id="session-info">加载中...</span>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot" id="vnc-dot"></span>
+                <span id="vnc-status">VNC: 连接中</span>
+            </div>
+        </div>
+        <div>
+            <button onclick="location.href='/'">← 返回列表</button>
+            <button id="btn-export">📥 导出日志</button>
+        </div>
+    </div>
+    
+    <!-- 主内容区（左右双栏） -->
+    <div class="main-container">
+        <!-- 左栏：日志面板 -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <h3>📋 运行日志</h3>
+                <div class="log-controls">
+                    <input type="text" id="log-search" placeholder="🔍 搜索日志...">
+                    <button class="filter-btn active" data-level="all">全部</button>
+                    <button class="filter-btn" data-level="THINKING">💭</button>
+                    <button class="filter-btn" data-level="ACTION">⚡</button>
+                    <button class="filter-btn" data-level="ERROR">❌</button>
+                </div>
+            </div>
+            <div class="log-content" id="log-content">
+                <!-- 日志条目将动态插入这里 -->
+            </div>
+            <div class="log-footer">
+                <div>
+                    <button id="btn-pause">⏸️ 暂停</button>
+                    <button id="btn-clear">🗑️ 清空</button>
+                </div>
+                <span id="log-count">0 条日志</span>
+            </div>
+        </div>
+        
+        <!-- 右栏：VNC 面板 -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <h3>🖥️ VNC 实时画面</h3>
+                <div>
+                    <button id="btn-reconnect">🔄 重连</button>
+                </div>
+            </div>
+            <div class="vnc-content">
+                <div id="vnc-screen">
+                    <div class="loading">正在连接 VNC...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // 导入 noVNC 和 ANSI 解析器
+        import RFB from 'https://cdn.jsdelivr.net/gh/novnc/noVNC@v1.4.0/core/rfb.js';
+        import { parseAnsiToHtml } from '/static/js/ansi-parser.js';
+        
+        const sessionId = location.pathname.split('/').pop();
+        let logs = [];
+        let filteredLogs = [];
+        let currentFilter = 'all';
+        let searchTerm = '';
+        let isPaused = false;
+        let autoScroll = true;
+        let rfb = null;
+        let ws = null;
+        
+        // 获取 Sandbox 信息
+        async function loadSessionInfo() {
+            try {
+                // ✅ 修复：使用正确的 API 路径 (sandboxes 复数)
+                const response = await fetch(`/api/sandboxes/${sessionId}`);
+                const sandbox = await response.json();
+                
+                // ✅ 修复：更新数据结构（后端返回的是 sandbox 对象，不是 data.session）
+                document.getElementById('session-info').textContent = 
+                    `Sandbox: ${sessionId.substring(0, 20)}...`;
+                
+                const sandboxDot = document.getElementById('sandbox-dot');
+                // ✅ 修复：检查 cdp_url 或 vnc_url 是否存在来判断在线状态
+                if (sandbox.cdp_url || sandbox.vnc_url) {
+                    sandboxDot.classList.add('online');
+                } else {
+                    sandboxDot.classList.remove('online');
+                }
+                
+                return sandbox;
+            } catch (error) {
+                console.error('加载 Sandbox 信息失败:', error);
+                return null;
+            }
+        }
+        
+        // 连接日志 WebSocket
+        function connectLogWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws/log/${sessionId}`);
+            
+            ws.onopen = () => {
+                console.log('日志 WebSocket 已连接');
+            };
+            
+            ws.onmessage = (event) => {
+                const log = JSON.parse(event.data);
+                if (log.type === 'ping') return; // 忽略心跳
+                
+                addLog(log);
+            };
+            
+            ws.onerror = () => {
+                console.error('日志 WebSocket 错误');
+            };
+            
+            ws.onclose = () => {
+                console.log('日志 WebSocket 已关闭，3秒后重连...');
+                setTimeout(connectLogWebSocket, 3000);
+            };
+            
+            // 定期发送心跳
+            setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send('ping');
+                }
+            }, 20000);
+        }
+        
+        // 添加日志
+        function addLog(log) {
+            if (isPaused) return;
+            
+            logs.push(log);
+            
+            if (matchesFilter(log)) {
+                filteredLogs.push(log);
+                renderLog(log);
+                
+                // 自动滚动
+                if (autoScroll) {
+                    const container = document.getElementById('log-content');
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+            
+            updateCount();
+        }
+        
+        // 检查是否匹配筛选条件
+        function matchesFilter(log) {
+            if (currentFilter !== 'all' && log.level !== currentFilter) {
+                return false;
+            }
+            
+            if (searchTerm && !log.message.toLowerCase().includes(searchTerm.toLowerCase())) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 渲染单条日志（支持 ANSI 颜色）
+        function renderLog(log) {
+            const container = document.getElementById('log-content');
+            const logEl = document.createElement('div');
+            logEl.className = `log-entry log-${log.level.toLowerCase()}`;
+            
+            // ✅ 修复：Python 时间戳是秒，JavaScript 需要毫秒
+            const time = new Date(log.timestamp * 1000).toLocaleTimeString('zh-CN');
+            
+            // ✅ 使用 ANSI 解析器渲染消息（支持颜色）
+            const coloredMessage = parseAnsiToHtml(log.message);
+            logEl.innerHTML = `<span class="log-time">${time}</span>${coloredMessage}`;
+            
+            container.appendChild(logEl);
+        }
+        
+        // 更新日志计数
+        function updateCount() {
+            document.getElementById('log-count').textContent = `${filteredLogs.length} 条日志`;
+        }
+        
+        // 重新筛选
+        function refilter() {
+            document.getElementById('log-content').innerHTML = '';
+            filteredLogs = [];
+            
+            logs.forEach(log => {
+                if (matchesFilter(log)) {
+                    filteredLogs.push(log);
+                    renderLog(log);
+                }
+            });
+            
+            updateCount();
+        }
+        
+        // 连接 VNC
+        async function connectVNC(vncUrl) {
+            if (!vncUrl) {
+                document.getElementById('vnc-screen').innerHTML = 
+                    '<div class="loading">VNC URL 未配置</div>';
+                return;
+            }
+            
+            try {
+                document.getElementById('vnc-screen').innerHTML = '';
+                rfb = new RFB(document.getElementById('vnc-screen'), vncUrl);
+                
+                rfb.addEventListener('connect', () => {
+                    console.log('VNC 已连接');
+                    document.getElementById('vnc-status').textContent = 'VNC: 已连接';
+                    document.getElementById('vnc-dot').classList.add('online');
+                });
+                
+                rfb.addEventListener('disconnect', (e) => {
+                    console.log('VNC 已断开');
+                    document.getElementById('vnc-status').textContent = 'VNC: 已断开';
+                    document.getElementById('vnc-dot').classList.remove('online');
+                    
+                    if (!e.detail.clean) {
+                        setTimeout(() => connectVNC(vncUrl), 3000);
+                    }
+                });
+                
+                rfb.scaleViewport = true;
+                rfb.resizeSession = false;
+                
+            } catch (error) {
+                console.error('VNC 连接失败:', error);
+                document.getElementById('vnc-screen').innerHTML = 
+                    '<div class="loading">VNC 连接失败，请刷新重试</div>';
+            }
+        }
+        
+        // 事件绑定
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            isPaused = !isPaused;
+            const btn = document.getElementById('btn-pause');
+            btn.textContent = isPaused ? '▶️ 继续' : '⏸️ 暂停';
+        });
+        
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            document.getElementById('log-content').innerHTML = '';
+            logs = [];
+            filteredLogs = [];
+            updateCount();
+        });
+        
+        document.getElementById('log-search').addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            refilter();
+        });
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.level;
+                refilter();
+            });
+        });
+        
+        document.getElementById('btn-reconnect').addEventListener('click', async () => {
+            const session = await loadSessionInfo();
+            if (session && session.vnc_url) {
+                connectVNC(session.vnc_url);
+            }
+        });
+        
+        document.getElementById('btn-export').addEventListener('click', () => {
+            const data = JSON.stringify(logs, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logs_${sessionId}_${new Date().getTime()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+        
+        // 初始化
+        (async () => {
+            const session = await loadSessionInfo();
+            connectLogWebSocket();
+            
+            if (session && session.vnc_url) {
+                connectVNC(session.vnc_url);
+            }
+        })();
+    </script>
+</body>
+</html>
+

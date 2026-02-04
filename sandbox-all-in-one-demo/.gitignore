@@ -1,0 +1,414 @@
+# =============================================================================
+# Python
+# =============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Scrapy
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+.env/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Ruff cache
+.ruff_cache/
+
+# uv
+.uv/
+
+# =============================================================================
+# Node.js / Frontend
+# =============================================================================
+# Dependencies
+node_modules/
+jspm_packages/
+bower_components/
+
+# Production build
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# pnpm
+.pnpm-store/
+.pnpm-debug.log
+
+# turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Next.js
+.next/
+out/
+
+# Nuxt.js
+.nuxt
+dist
+
+# Gatsby
+.cache/
+public
+
+# Vuepress
+.vuepress/dist
+
+# Serverless
+.serverless/
+
+# FuseBox
+.fusebox/
+
+# DynamoDB Local
+.dynamodb/
+
+# TernJS
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# =============================================================================
+# 环境变量和配置文件
+# =============================================================================
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.local
+
+# =============================================================================
+# 数据文件（包含敏感信息）
+# =============================================================================
+data/*.json
+data/*.pkl
+data/*.csv
+data/*.xlsx
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# 但保留示例文件和 .gitkeep
+!data/.gitkeep
+!data/*.example.*
+!data/*.sample.*
+
+# =============================================================================
+# 日志文件
+# =============================================================================
+*.log
+logs/
+log/
+*.log.*
+
+# =============================================================================
+# 临时文件
+# =============================================================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+temp/
+tmp/
+.temp/
+.tmp/
+
+# =============================================================================
+# 数据库文件
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# =============================================================================
+# 参考项目 (repos 目录下的子项目依赖和构建产物)
+# =============================================================================
+repos/**/node_modules/
+repos/**/dist/
+repos/**/build/
+repos/**/__pycache__/
+repos/**/*.pyc
+repos/**/.venv/
+repos/**/venv/
+repos/**/.next/
+repos/**/.nuxt/
+repos/**/.cache/
+
+# =============================================================================
+# IDE 特定文件
+# =============================================================================
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# 系统文件
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# 其他
+# =============================================================================
+# Backup files
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+
+# Lock files
+*.lock
+!pnpm-lock.yaml
+!package-lock.json
+!yarn.lock
+!uv.lock
+
+# Compressed files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+.sisyphus/
+.cursor/

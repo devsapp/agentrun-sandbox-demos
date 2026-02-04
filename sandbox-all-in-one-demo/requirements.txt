@@ -1,0 +1,36 @@
+# AgentRun AIO Demo - Python 依赖清单
+# 使用方式：pip install -r requirements.txt 或 uv pip install -r requirements.txt
+
+# AgentRun SDK
+agentrun-sdk>=0.0.9
+
+# Web 框架
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# HTTP 客户端
+httpx>=0.25.0
+
+# 数据验证
+pydantic>=2.0.0
+
+# 浏览器自动化（备用，主要使用 Node.js + Puppeteer）
+playwright>=1.40.0
+
+# LangChain 框架（AI 对话能力）
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-core>=0.1.0
+
+# 爬虫和数据处理
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# 中文分词（情感分析）
+jieba>=0.42.1
+
+# 环境变量管理
+python-dotenv>=1.0.0
+
+# 解决依赖冲突
+protobuf<6.0.0

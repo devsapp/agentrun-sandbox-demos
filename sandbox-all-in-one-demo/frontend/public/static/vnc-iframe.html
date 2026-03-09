@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>noVNC Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        #vnc-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+        
+        #vnc-screen {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .loading, .error {
+            color: #fff;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #ff6b6b;
+        }
+        
+        .status-bar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff6b6b;
+        }
+        
+        .status-dot.connected {
+            background: #51cf66;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .btn {
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <div id="vnc-container">
+        <div id="vnc-screen">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>正在连接 VNC...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">连接中...</span>
+    </div>
+    
+    <div class="controls">
+        <button class="btn" id="btn-reconnect">🔄 重连</button>
+        <button class="btn" id="btn-fullscreen">⛶ 全屏</button>
+    </div>
+    
+    <script type="module">
+        import RFB from 'https://cdn.jsdelivr.net/gh/novnc/noVNC@v1.4.0/core/rfb.js';
+        
+        let rfb = null;
+        let vncUrl = '';
+        
+        // 从 URL 参数获取 VNC 地址
+        function getVncUrlFromParams() {
+            const params = new URLSearchParams(window.location.search);
+            const url = params.get('url') || params.get('vnc_url') || params.get('vncUrl');
+            
+            if (!url) {
+                showError('未提供 VNC 连接地址');
+                return null;
+            }
+            
+            return url;
+        }
+        
+        // 显示错误
+        function showError(message) {
+            document.getElementById('vnc-screen').innerHTML = 
+                `<div class="error">❌ ${message}</div>`;
+            updateStatus('error', message);
+        }
+        
+        // 更新状态
+        function updateStatus(status, text) {
+            const dot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            
+            dot.className = 'status-dot';
+            if (status === 'connected') {
+                dot.classList.add('connected');
+            }
+            
+            statusText.textContent = text;
+        }
+        
+        // 连接 VNC
+        function connectVNC(url) {
+            if (!url) {
+                showError('VNC URL 无效');
+                return;
+            }
+            
+            vncUrl = url;
+            updateStatus('connecting', '连接中...');
+            
+            try {
+                // 清空容器
+                const container = document.getElementById('vnc-screen');
+                container.innerHTML = '';
+                
+                // 创建 RFB 连接
+                rfb = new RFB(container, url);
+                
+                // 连接事件
+                rfb.addEventListener('connect', () => {
+                    console.log('VNC 已连接');
+                    updateStatus('connected', '已连接');
+                });
+                
+                // 断开事件
+                rfb.addEventListener('disconnect', (e) => {
+                    console.log('VNC 已断开', e.detail);
+                    updateStatus('disconnected', '已断开');
+                    
+                    // 非正常断开时自动重连
+                    if (!e.detail.clean) {
+                        setTimeout(() => {
+                            console.log('尝试重新连接...');
+                            connectVNC(vncUrl);
+                        }, 3000);
+                    }
+                });
+                
+                // 配置 RFB
+                rfb.scaleViewport = true;  // 自动缩放视口
+                rfb.resizeSession = false; // 不调整远程会话大小
+                
+            } catch (error) {
+                console.error('VNC 连接失败:', error);
+                showError(`连接失败: ${error.message}`);
+            }
+        }
+        
+        // 重连按钮
+        document.getElementById('btn-reconnect').addEventListener('click', () => {
+            if (rfb) {
+                rfb.disconnect();
+            }
+            connectVNC(vncUrl);
+        });
+        
+        // 全屏按钮
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+            const elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                elem.requestFullscreen().catch(err => {
+                    console.error('无法进入全屏:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+        
+        // 监听 postMessage（用于父窗口动态更新 VNC URL）
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'updateVncUrl') {
+                console.log('收到新的 VNC URL:', event.data.url);
+                if (rfb) {
+                    rfb.disconnect();
+                }
+                connectVNC(event.data.url);
+            }
+        });
+        
+        // 初始化
+        const initialUrl = getVncUrlFromParams();
+        if (initialUrl) {
+            connectVNC(initialUrl);
+        }
+        
+        // 向父窗口发送准备就绪消息
+        if (window.parent !== window) {
+            window.parent.postMessage({ type: 'vncViewerReady' }, '*');
+        }
+    </script>
+</body>
+</html>

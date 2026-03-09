@@ -212,7 +212,6 @@ dist
 
 # Gatsby
 .cache/
-public
 
 # Vuepress
 .vuepress/dist
@@ -412,3 +411,4 @@ $RECYCLE.BIN/
 *.zip
 .sisyphus/
 .cursor/
+!frontend/src/lib/

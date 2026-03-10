@@ -1,0 +1,6 @@
+# AgentRun AIO Sandbox Skill 源码依赖
+agentrun-sdk[playwright,server]
+python-dotenv
+httpx
+alibabacloud_sts20150401
+alibabacloud_credentials

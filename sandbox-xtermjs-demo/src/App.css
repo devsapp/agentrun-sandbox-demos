@@ -1,0 +1,277 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1e1e1e;
+}
+
+.app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Terminal Wrapper - 全屏布局 */
+.terminal-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background-color: #1e1e1e;
+}
+
+/* 顶部工具栏 */
+.terminal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #252526;
+  border-bottom: 1px solid #3e3e42;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.terminal-brand {
+  color: #cccccc;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.url-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.url-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 6px 10px;
+  background-color: #3c3c3c;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  color: #cccccc;
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.url-input:focus {
+  border-color: #007acc;
+}
+
+.url-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.url-input::placeholder {
+  color: #6e6e6e;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 按钮样式 */
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-connect {
+  background-color: #0e639c;
+  color: white;
+}
+
+.btn-connect:hover:not(:disabled) {
+  background-color: #1177bb;
+}
+
+.btn-disconnect {
+  background-color: #c75450;
+  color: white;
+}
+
+.btn-disconnect:hover:not(:disabled) {
+  background-color: #d96966;
+}
+
+.btn-clear {
+  background-color: #4b5563;
+  color: white;
+}
+
+.btn-clear:hover:not(:disabled) {
+  background-color: #6b7280;
+}
+
+/* 终端主体区域 */
+.terminal-main {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background-color: #1e1e1e;
+}
+
+.terminal-viewport {
+  width: 100%;
+  height: 100%;
+}
+
+/* xterm 样式覆盖 - 确保终端正确显示 */
+.terminal-viewport .xterm {
+  height: 100% !important;
+  width: 100% !important;
+  padding: 4px;
+}
+
+.terminal-viewport .xterm-screen {
+  background-color: #1e1e1e !important;
+}
+
+.terminal-viewport .xterm-viewport {
+  background-color: #1e1e1e !important;
+}
+
+/* 确保光标可见 */
+.terminal-viewport .xterm-cursor {
+  background-color: #aeafad !important;
+}
+
+.terminal-viewport .xterm-cursor-bar {
+  background-color: #aeafad !important;
+}
+
+.terminal-viewport .xterm-cursor-underline {
+  border-bottom-color: #aeafad !important;
+}
+
+.terminal-viewport .xterm-cursor-box {
+  border-color: #aeafad !important;
+}
+
+/* 底部状态栏 */
+.terminal-statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 16px;
+  background-color: #007acc;
+  color: white;
+  font-size: 12px;
+  flex-shrink: 0;
+  height: 24px;
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.status-indicator.connected {
+  color: #89d185;
+}
+
+.status-indicator.disconnected {
+  color: #f48771;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.status-separator {
+  opacity: 0.6;
+}
+
+.status-url {
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 11px;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
+}

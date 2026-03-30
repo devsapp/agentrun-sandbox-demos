@@ -1,0 +1,42 @@
+version: "0.5"
+
+# Process Compose 配置 - Echo Server 服务
+# 用户自定义服务扩展
+
+log_level: info
+
+# 全局环境变量（所有进程继承）
+environment:
+  - PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+processes:
+  echoserver:
+    command: "python3 /usr/local/bin/echo_server.py"
+    availability:
+      restart: "always"
+      backoff_seconds: 2
+      max_restarts: 5
+    readiness_probe:
+      # HTTP 健康检查
+      http_get:
+        host: localhost
+        port: ${ECHO_SERVER_PORT:-9000}
+        path: /
+      initial_delay_seconds: 1
+      period_seconds: 10
+      timeout_seconds: 2
+      success_threshold: 1
+      failure_threshold: 3
+    environment:
+      - ECHO_SERVER_HOST=0.0.0.0
+      - ECHO_SERVER_PORT=9000
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    log_configuration:
+      disable_json: true
+      no_metadata: false
+      add_timestamp: true
+      timestamp_format: "2006-01-02 15:04:05.000"
+      fields_to_append:
+        - level=INFO
+

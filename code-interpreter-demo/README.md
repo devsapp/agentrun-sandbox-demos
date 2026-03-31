@@ -199,6 +199,28 @@ finally:
     if sandbox:
         destroy_sandbox(sandbox)
 ```
+## 预期执行结果
+
+```
+创建 Sandbox...
+Sandbox 创建成功！
+   - Sandbox ID: 01KN10ANPQ1N4QNW5R3GXXXXXX
+   - 状态: READY
+
+创建执行上下文...
+上下文创建成功！
+
+执行代码...
+执行结果:
+[{'type': 'stdout', 'text': '半径为 5 的圆面积: 78.54\n当前时间: 2026-03-31 11:52:24.914464'}, {'type': 'result', 'data': {'text/plain': 'Code executed successfully'}, 'executionCount': 1}]
+
+继续执行代码（复用上下文）...
+执行结果:
+[{'type': 'stdout', 'text': '周长: 31.42'}, {'type': 'result', 'data': {'text/plain': 'Code executed successfully'}, 'executionCount': 1}]
+
+Sandbox 已停止: 01KN10ANPQ1N4QNW5R3GXXXXXX
+```
+
 
 ## 函数说明
 

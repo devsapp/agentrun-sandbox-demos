@@ -1,0 +1,5 @@
+# AgentRun SDK
+agentrun-sdk[playwright,server]>=0.0.8
+
+# 环境变量管理
+python-dotenv>=1.0.0
